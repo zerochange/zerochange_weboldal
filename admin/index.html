@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero Change Admin</title>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: url('../other/wallpaper.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .admin-container {
+            width: 95%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+        }
+        
+        .tables-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .table-wrapper {
+            background-color: rgba(245, 245, 245, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .table-wrapper h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #000;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f3e03a;
+            color: #000;
+            font-weight: bold;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .save-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #f3e03a;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .save-button:hover {
+            background-color: #e6d433;
+        }
+        
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #000;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .login-form h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .login-form input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .login-form button {
+            padding: 12px;
+            background-color: rgba(243, 224, 58, 0.9);
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .login-form button:hover {
+            background-color: #e6d433;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .admin-content {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <form class="login-form" id="loginForm">
+            <h2>Admin Bejelentkezés</h2>
+            <input type="password" id="password" placeholder="Jelszó" required>
+            <button type="submit">Bejelentkezés</button>
+            <div class="error-message" id="errorMessage">Hibás jelszó!</div>
+        </form>
+    </div>
+
+    <div class="admin-content" id="adminContent">
+        <div class="admin-container">
+            <div class="title">Zero Change Admin Felület</div>
+            <div class="tables-container">
+                <!-- Első táblázat -->
+                <div class="table-wrapper">
+                    <h2>600.000 Ft feletti árfolyamok</h2>
+                    <table id="highAmountTable">
+                        <thead>
+                            <tr>
+                                <th>Valuta</th>
+                                <th>Vétel</th>
+                                <th>Eladás</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>GBP - Angol Font</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>EUR - Euró</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>CHF - Svájci Frank</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>USD - USA Dollár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>CAD - Kanadai Dollár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>AUD - Ausztrál Dollár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>PLN - Lengyel Zloty</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>RON - Román Lej</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>CZK - Cseh Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>NOK - Norvég Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>SEK - Svéd Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>DKK - Dán Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>RSD - Szerb Dinár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>JPY - Japán Yen</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                        </tbody>
+                    </table>
+                    <button class="save-button" id="saveHighAmount">Mentés</button>
+                </div>
+                
+                <!-- Második táblázat -->
+                <div class="table-wrapper">
+                    <h2>Normál árfolyamok</h2>
+                    <table id="normalAmountTable">
+                        <thead>
+                            <tr>
+                                <th>Valuta</th>
+                                <th>Vétel</th>
+                                <th>Eladás</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>GBP - Angol Font</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>EUR - Euró</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>CHF - Svájci Frank</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>USD - USA Dollár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>CAD - Kanadai Dollár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>AUD - Ausztrál Dollár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>PLN - Lengyel Zloty</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>RON - Román Lej</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>CZK - Cseh Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>NOK - Norvég Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>SEK - Svéd Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>DKK - Dán Korona</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>RSD - Szerb Dinár</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                            <tr><td>JPY - Japán Yen</td><td><input type="text" class="buy-input"></td><td><input type="text" class="sell-input"></td></tr>
+                        </tbody>
+                    </table>
+                    <button class="save-button" id="saveNormalAmount">Mentés</button>
+                </div>
+                
+                <!-- Harmadik táblázat -->
+                <div class="table-wrapper">
+                    <h2>Fémpénz árfolyamok</h2>
+                    <table id="coinAmountTable">
+                        <thead>
+                            <tr>
+                                <th>Valuta</th>
+                                <th>Vétel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1, 2<br>Euro</td><td><input type="text" class="buy-input"></td></tr>
+                            <tr><td>10, 20, 50<br>Euro Cent</td><td><input type="text" class="buy-input"></td></tr>
+                            <tr><td>1, 2, 5<br>Euro Cent</td><td><input type="text" class="buy-input"></td></tr>
+                            <tr><td>1, 2<br>Angol Font</td><td><input type="text" class="buy-input"></td></tr>
+                            <tr><td>10, 20, 50<br>Angol Penny</td><td><input type="text" class="buy-input"></td></tr>
+                            <tr><td>1, 2, 5<br>Svájci Frank</td><td><input type="text" class="buy-input"></td></tr>
+                        </tbody>
+                    </table>
+                    <button class="save-button" id="saveCoinAmount">Mentés</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase konfiguráció
+        const firebaseConfig = {
+                apiKey: "AIzaSyDZ9nxkoVymJ6SiV9WLYGuQ_cUA9m7DfSg",
+                authDomain: "zerochange-6ac9f.firebaseapp.com",
+                databaseURL: "https://zerochange-6ac9f-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "zerochange-6ac9f",
+                storageBucket: "zerochange-6ac9f.firebasestorage.app",
+                messagingSenderId: "827655568189",
+                appId: "1:827655568189:web:95e7aafbb5c859d8d6e354",
+                measurementId: "G-PZV5JWBTS7"
+
+        };
+
+        // Firebase inicializálása
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Adatok betöltése az oldal megnyitásakor
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
+
+        // Adatok betöltése
+        function loadData() {
+            // Első táblázat adatainak betöltése
+            const highAmountRef = database.ref('rates/highAmount');
+            highAmountRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const rows = document.querySelectorAll('#highAmountTable tbody tr');
+                    rows.forEach((row, index) => {
+                        const currency = row.querySelector('td:first-child').textContent;
+                        const buyInput = row.querySelector('.buy-input');
+                        const sellInput = row.querySelector('.sell-input');
+                        
+                        if (data[currency]) {
+                            buyInput.value = data[currency].buy || '';
+                            sellInput.value = data[currency].sell || '';
+                        }
+                    });
+                }
+            });
+
+            // Második táblázat adatainak betöltése
+            const normalAmountRef = database.ref('rates/normalAmount');
+            normalAmountRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const rows = document.querySelectorAll('#normalAmountTable tbody tr');
+                    rows.forEach((row, index) => {
+                        const currency = row.querySelector('td:first-child').textContent;
+                        const buyInput = row.querySelector('.buy-input');
+                        const sellInput = row.querySelector('.sell-input');
+                        
+                        if (data[currency]) {
+                            buyInput.value = data[currency].buy || '';
+                            sellInput.value = data[currency].sell || '';
+                        }
+                    });
+                }
+            });
+
+            // Harmadik táblázat adatainak betöltése
+            const coinAmountRef = database.ref('rates/coinAmount');
+            coinAmountRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const rows = document.querySelectorAll('#coinAmountTable tbody tr');
+                    rows.forEach((row, index) => {
+                        const currency = row.querySelector('td:first-child').textContent;
+                        const buyInput = row.querySelector('.buy-input');
+                        
+                        if (data[currency]) {
+                            buyInput.value = data[currency].buy || '';
+                        }
+                    });
+                }
+            });
+        }
+
+        // Mentés gomb eseménykezelője - első táblázat
+        document.getElementById('saveHighAmount').addEventListener('click', () => {
+            const rows = document.querySelectorAll('#highAmountTable tbody tr');
+            const data = {};
+            
+            rows.forEach(row => {
+                const currency = row.querySelector('td:first-child').textContent;
+                const buyValue = row.querySelector('.buy-input').value;
+                const sellValue = row.querySelector('.sell-input').value;
+                
+                data[currency] = {
+                    buy: buyValue,
+                    sell: sellValue
+                };
+            });
+
+            // Adatok mentése Firebase-be
+            database.ref('rates/highAmount').set(data)
+                .then(() => {
+                    alert('Adatok sikeresen mentve!');
+                })
+                .catch((error) => {
+                    alert('Hiba történt a mentés során: ' + error.message);
+                });
+        });
+
+        // Mentés gomb eseménykezelője - második táblázat
+        document.getElementById('saveNormalAmount').addEventListener('click', () => {
+            const rows = document.querySelectorAll('#normalAmountTable tbody tr');
+            const data = {};
+            
+            rows.forEach(row => {
+                const currency = row.querySelector('td:first-child').textContent;
+                const buyValue = row.querySelector('.buy-input').value;
+                const sellValue = row.querySelector('.sell-input').value;
+                
+                data[currency] = {
+                    buy: buyValue,
+                    sell: sellValue
+                };
+            });
+
+            // Adatok mentése Firebase-be
+            database.ref('rates/normalAmount').set(data)
+                .then(() => {
+                    alert('Adatok sikeresen mentve!');
+                })
+                .catch((error) => {
+                    alert('Hiba történt a mentés során: ' + error.message);
+                });
+        });
+
+        // Mentés gomb eseménykezelője - harmadik táblázat
+        document.getElementById('saveCoinAmount').addEventListener('click', () => {
+            const rows = document.querySelectorAll('#coinAmountTable tbody tr');
+            const data = {};
+            
+            rows.forEach(row => {
+                const currency = row.querySelector('td:first-child').textContent;
+                const buyValue = row.querySelector('.buy-input').value;
+                
+                data[currency] = {
+                    buy: buyValue
+                };
+            });
+
+            // Adatok mentése Firebase-be
+            database.ref('rates/coinAmount').set(data)
+                .then(() => {
+                    alert('Adatok sikeresen mentve!');
+                })
+                .catch((error) => {
+                    alert('Hiba történt a mentés során: ' + error.message);
+                });
+        });
+
+        // Bejelentkezési űrlap kezelése
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            try {
+                // Bejelentkezés Firebase Authentication használatával
+                const email = "admin@admin.com"; // Ez lesz az admin email címe
+                await auth.signInWithEmailAndPassword(email, password);
+                
+                // Sikeres bejelentkezés
+                document.querySelector('.login-container').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                loadData(); // Adatok betöltése
+            } catch (error) {
+                console.error('Hiba történt:', error);
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // Kijelentkezés eseménykezelője
+        window.addEventListener('beforeunload', () => {
+            auth.signOut();
+        });
+    </script>
+</body>
+</html> 
