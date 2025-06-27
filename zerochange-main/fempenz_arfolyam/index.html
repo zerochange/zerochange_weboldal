@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zero Change | Pénzváltó Dunakeszi</title>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: url('../other/wallpaper.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            width: 95%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            padding: 0.5vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: auto;
+            min-height: auto;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            overflow: hidden;
+            background-color: rgba(245, 245, 245, 0.8);
+        }
+        
+        .rates-table {
+            height: 100%;
+            margin: 15px 0;
+            padding: 0;
+            width: 98%;
+            display: flex;
+            justify-content: center;
+            background-color: rgba(245, 245, 245, 0.8);
+            min-height: auto;
+        }
+        
+        .table-container {
+            width: 100%;
+            border: 1px solid black;
+            background-color: rgba(255, 255, 255, 0.8);
+            font-size: 19px;
+            box-shadow: 0 0 18px rgba(0, 0, 0, 0.55);
+        }
+        
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table-container th, .table-container td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid black;
+            border-right: 1px solid black;
+        }
+        
+        .table-container th {
+            background-color: rgba(245, 245, 245, 0.85);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #333;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+            border-bottom: 2px solid black;
+        }
+        
+        .table-container th:last-child, 
+        .table-container td:last-child {
+            border-right: none;
+        }
+        
+        .table-container tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .currency-name {
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-left: 20px;
+            font-size: 20px;
+            min-width: 250px;
+        }
+        
+        .flag-cell {
+            width: 180px;
+            padding: 15px !important;
+            text-align: center;
+        }
+        
+        .flag-cell .flag {
+            width: 160px;
+            height: auto;
+            max-height: 120px;
+            vertical-align: middle;
+            box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.45);
+            object-fit: contain;
+        }
+        
+        .table-container tr:nth-child(even) {
+            background-color: rgba(250, 250, 250, 0.7);
+        }
+        
+        .table-container tr:hover {
+            background-color: rgba(240, 240, 240, 0.85);
+        }
+        
+        @media screen and (max-width: 768px) {
+            body {
+                background: url('../other/wallpaper.jpg') center center fixed;
+                background-size: cover;
+                min-height: 100vh;
+                width: 100vw;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                padding: 2vh 10px;
+                margin: 0;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            
+            .container {
+                width: 98%;
+                margin: 0;
+                padding: 0.5vh;
+                min-height: auto;
+                height: auto;
+            }
+            
+            .main-content {
+                padding: 5px;
+                height: auto;
+                min-height: auto;
+            }
+            
+            .rates-table {
+                height: auto;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+            
+            .table-container {
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 0;
+                border-collapse: collapse;
+                table-layout: fixed;
+                font-size: 16px;
+                box-shadow: 0 0 18px rgba(0, 0, 0, 0.55);
+            }
+            
+            .table-container thead {
+                height: auto;
+            }
+            
+            .table-container thead th {
+                font-size: min(14px, 2vh);
+                padding: 8px;
+                height: auto;
+                vertical-align: middle;
+            }
+            
+            .table-container tbody {
+                height: auto;
+            }
+            
+            .table-container tbody tr {
+                height: auto;
+            }
+            
+            .flag-cell {
+                width: 20%;
+                padding: 8px !important;
+                height: auto;
+                vertical-align: middle;
+            }
+            
+            .flag-cell .flag {
+                height: auto;
+                width: auto;
+                max-width: 80%;
+                object-fit: contain;
+                display: block;
+                margin: 0 auto;
+            }
+            
+            .currency-name {
+                width: 50%;
+                font-size: min(13px, 1.8vh);
+                padding: 8px;
+                height: auto;
+                vertical-align: middle;
+                line-height: 1.2;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            
+            .table-container td:last-child {
+                width: 30%;
+                font-size: min(13px, 1.8vh);
+                padding: 8px;
+                height: auto;
+                vertical-align: middle;
+            }
+            
+            .title {
+                height: auto;
+                font-size: min(24px, 4vw);
+                margin: 0;
+                padding: 1vh 0;
+            }
+            
+            .back-button {
+                height: 30px;
+                width: 50%;
+                font-size: 13px;
+                margin: 1vh auto;
+            }
+            
+            .table-container td {
+                padding: 8px;
+            }
+            
+            .table-container td img {
+                max-width: 40px !important;
+                height: auto;
+            }
+            
+            .table-container thead th {
+                font-size: min(16px, 2.2vh);
+                padding: 8px;
+                height: auto;
+                vertical-align: middle;
+            }
+            
+            .flag-cell {
+                width: 20%;
+                padding: 8px !important;
+                height: auto;
+                vertical-align: middle;
+            }
+            
+            .flag-cell .flag {
+                height: auto;
+                width: auto;
+                max-width: 100%;
+                object-fit: contain;
+                display: block;
+                margin: 0 auto;
+            }
+            
+            .currency-name {
+                width: 45%;
+                font-size: min(15px, 2vh);
+                padding: 8px;
+                height: auto;
+                vertical-align: middle;
+                line-height: 1.2;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            
+            .table-container td:last-child {
+                width: 35%;
+                font-size: min(15px, 2vh);
+                padding: 8px;
+                height: auto;
+                vertical-align: middle;
+            }
+        }
+        
+        .flag {
+            width: 100px;
+            height: 67px;
+            object-fit: cover;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .currency-cell {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 5px;
+            padding: 5px;
+        }
+        
+        .back-button {
+            height: min(35px, 4.5vh);
+            width: 60%;
+            font-size: min(15px, 2.3vh);
+            padding: min(8px, 1.2vh) min(18px, 1.8vh);
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(243, 224, 58, 0.9);
+            text-decoration: none;
+            border-radius: min(5px, 0.8vh);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            color: #000000;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background-color: #e6d433;
+            box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+        }
+        
+        .title {
+            text-align: center;
+            font-size: min(32px, 4vw);
+            font-weight: bold;
+            margin: 0;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            padding: 0;
+            height: 6vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(245, 245, 245, 0.8);
+            border-bottom: 1px solid black;
+        }
+        
+        .disclaimer a {
+            color: #000;
+            text-decoration: underline;
+            font-weight: bold;
+            font-size: 1em;
+            display: block;
+            margin-bottom: 5px;
+            font-style: normal;
+        }
+        
+        .table-container td img {
+            max-width: 120px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Fémpénz vételi árfolyamjegyzék</div>
+        
+        <div class="main-content">
+            <div class="rates-table">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th colspan="2">Valuta</th>
+                                <th>Vétel</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coinAmountRates">
+                            <tr>
+                                <td>
+                                    <img src="../coins/euro1,2.png" alt="1, 2 Euro">
+                                </td>
+                                <td>1, 2<br>Euro</td>
+                                <td class="buy-rate"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="../coins/eurocent10,20,50.png" alt="10, 20, 50 Euro Cent">
+                                </td>
+                                <td>10, 20, 50<br>Euro Cent</td>
+                                <td class="buy-rate"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="../coins/eurocent1,2,5.png" alt="1, 2, 5 Euro Cent">
+                                </td>
+                                <td>1, 2, 5<br>Euro Cent</td>
+                                <td class="buy-rate"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="../coins/pound1,2.png" alt="1, 2 Angol Font">
+                                </td>
+                                <td>1, 2<br>Angol Font</td>
+                                <td class="buy-rate"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="../coins/penny10,20,50.png" alt="10, 20, 50 Angol Penny">
+                                </td>
+                                <td>10, 20, 50<br>Angol Penny</td>
+                                <td class="buy-rate"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <img src="../coins/frank1,2,5.png" alt="1, 2, 5 Svájci Frank">
+                                </td>
+                                <td>1, 2, 5<br>Svájci Frank</td>
+                                <td class="buy-rate"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <a href="https://zerochange.vercel.app/" class="back-button">Vissza</a>
+        </div>
+    </div>
+
+    <script>
+        // Firebase konfiguráció
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZ9nxkoVymJ6SiV9WLYGuQ_cUA9m7DfSg",
+            authDomain: "zerochange-6ac9f.firebaseapp.com",
+            databaseURL: "https://zerochange-6ac9f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "zerochange-6ac9f",
+            storageBucket: "zerochange-6ac9f.firebasestorage.app",
+            messagingSenderId: "827655568189",
+            appId: "1:827655568189:web:95e7aafbb5c859d8d6e354",
+            measurementId: "G-PZV5JWBTS7"
+        };
+
+        // Firebase inicializálása
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Adatok betöltése és megjelenítése
+        window.addEventListener('DOMContentLoaded', () => {
+            const coinAmountRef = database.ref('rates/coinAmount');
+            coinAmountRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const rows = document.querySelectorAll('#coinAmountRates tr');
+                    rows.forEach(row => {
+                        const currency = row.querySelector('td:nth-child(2)').textContent;
+                        const buyCell = row.querySelector('.buy-rate');
+                        
+                        if (data[currency]) {
+                            buyCell.textContent = data[currency].buy || '-';
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
